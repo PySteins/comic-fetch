@@ -17,37 +17,69 @@ flag 1新增漫画, 2更新漫画
 func (t *Message) Dingtalk(flag int, params ...string) (notice bool) {
 	tk := "https://oapi.dingtalk.com/robot/send?access_token=" + t.Conf.Notice.DindTalkToken
 
-	var content, mobile, all string
+	/*
+			var content, mobile, all string
 
-	mobile = t.Conf.Notice.Receiver
-	all = "false"
+			mobile = t.Conf.Notice.Receiver
+			all = "false"
 
-	if t.Conf.Notice.Receiver == "" {
-		all = "true"
-	}
+			if t.Conf.Notice.Receiver == "" {
+				all = "true"
+			}
+
+			post := `
+		{
+		    "msgtype": "text",
+		    "text": {
+		        "content": "%s"
+		    },
+		    "at": {
+		        "atMobiles": [
+		            "%s"
+		        ],
+		        "isAtAll": %s
+		    }
+		}`
+
+			//新增
+			if flag == 1 {
+				content = fmt.Sprintf("新增\n漫画:《%s》\n来源: %s\n", params[0], params[1])
+				//更新
+			} else if flag == 2 {
+				content = fmt.Sprintf("更新\n漫画:《%s》\n章节:《%s》\n", params[0], params[2])
+			}
+
+			post = fmt.Sprintf(post, content, mobile, all)
+	*/
 
 	post := `
 {
-     "msgtype": "text",
-     "text": {
-         "content": "%s"
-     },
-     "at": {
-         "atMobiles": [
-             "%s"
-         ], 
-         "isAtAll": %s
-     }
- }`
-	//新增
+    "msgtype": "link", 
+    "link": {
+        "text": "%s", 
+        "title": "%s", 
+        "picUrl": "%s", 
+        "messageUrl": "%s"
+    }
+}
+`
+	var title, text, picUrl, messageUrl string
+	////新增
 	if flag == 1 {
-		content = fmt.Sprintf("新增\n漫画:《%s》\n来源: %s\n", params[0], params[1])
+		title = fmt.Sprintf("新增漫画:《%s》", params[0])
+		text = "来源: %s\n"
+		picUrl = fmt.Sprintf("%s/images/%s.jpg", t.Conf.Setting.DomainUrl, params[3])
+		messageUrl = fmt.Sprintf("%s/chapter/%s/0/", t.Conf.Setting.DomainUrl, params[3])
 		//更新
 	} else if flag == 2 {
-		content = fmt.Sprintf("更新\n漫画:《%s》\n章节:《%s》\n", params[0], params[1])
+		title = fmt.Sprintf("更新漫画:《%s》", params[0])
+		text = fmt.Sprintf("章节:《%s》", params[2])
+		picUrl = fmt.Sprintf("%s/images/%s.jpg", t.Conf.Setting.DomainUrl, params[3])
+		messageUrl = fmt.Sprintf("%s/picture/%s/%s/", t.Conf.Setting.DomainUrl, params[3], params[4])
 	}
 
-	post = fmt.Sprintf(post, content, mobile, all)
+	post = fmt.Sprintf(post, text, title, picUrl, messageUrl)
+
 	//fmt.Println(post)
 	req, err := http.NewRequest("POST", tk, strings.NewReader(post))
 	if err != nil {

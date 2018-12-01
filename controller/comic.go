@@ -23,6 +23,10 @@ type Init struct {
 	Conf    library.Config
 }
 
+var (
+	chapterUrl string
+)
+
 /**
 抓取漫画初始化
 */
@@ -107,10 +111,8 @@ func (t *Init) newBooks() {
 					}
 				}
 
-				//漫画160
-				if v2.Flag == "mh160" {
-					t.addMh160Book(v2.Id)
-				}
+				t.addMhBook(v2.Id, v2.Flag)
+
 				fmt.Printf("\n新增漫画ID(%d), 来源：<<%s>>\n", v2.Id, v2.Flag)
 			Next:
 			}
@@ -168,11 +170,22 @@ func (t *Init) getComicList() {
 /**
 添加漫画160的漫画
 */
-func (t *Init) addMh160Book(id int) {
-	var mh mh160
-	mh.db = t.Model.Db
-	mh.id = id
-	mh.Init()
+func (t *Init) addMhBook(id int, flag string) {
+	switch flag {
+	case "mh160":
+		var mh mh160
+		mh.db = t.Model.Db
+		mh.id = id
+		mh.Init()
+		break
+
+	case "shenmanhua":
+		break
+
+	default:
+		return
+	}
+
 }
 
 var (

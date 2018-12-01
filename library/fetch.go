@@ -19,7 +19,7 @@ import (
 获取源码
 */
 func FetchSource(url string) (doc *goquery.Document) {
-	var timeout time.Duration = 30
+	var timeout time.Duration = 10
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		DialContext: (&net.Dialer{
@@ -45,7 +45,6 @@ func FetchSource(url string) (doc *goquery.Document) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	return doc
 }
 

@@ -16,6 +16,7 @@ import (
 	"github.com/skiy/comicFetch/library"
 	"github.com/skiy/comicFetch/model"
 	"net"
+	"net/url"
 )
 
 type mh160 struct {
@@ -98,7 +99,7 @@ func (t *mh160) mobileChapter() {
 				switch t.Conf.Notice.Open {
 				//钉钉通知
 				case 1:
-					msg.Dingtalk(1, bookName, t.originWeb)
+					msg.Dingtalk(1, bookName, t.originWeb, strconv.Itoa(book.Id))
 					break
 
 				}
@@ -236,7 +237,7 @@ func (t *mh160) mobileChapter() {
 					switch t.Conf.Notice.Open {
 					//钉钉通知
 					case 1:
-						msg.Dingtalk(2, bookName, chapterName)
+						msg.Dingtalk(2, bookName, "", chapterName, strconv.Itoa(book.Id), strconv.Itoa(chapterInfo.Id))
 						break
 
 					}
@@ -250,11 +251,10 @@ func (t *mh160) mobileChapter() {
 获取共几话
 */
 func (t *mh160) countImage(url string) (counts int) {
-	fetchUrl := t.url + url
-	//fmt.Println(fetchUrl)
+	chapterUrl = t.url + url
 
 	var err error
-	doc := library.FetchSource(fetchUrl)
+	doc := library.FetchSource(chapterUrl)
 
 	doc.Find(".main-bar").Each(func(i int, s *goquery.Selection) {
 		imagePage := s.Find(".manga-page").Text()
@@ -280,28 +280,34 @@ func (t *mh160) countImage(url string) (counts int) {
 获取漫画图片
 */
 func (t *mh160) detail(originChapterId string, bookId, chapterId, chapterNum int, bookName, chapterName string, counts int) (isAdd bool) {
-	var realUrl string
+	var realUrl, baseUrl string
 	var has bool
 
-	baseUrl := "https://mhpic%s.lineinfo.cn/mh160tuku/%s/%s_%d/%s_%s/"
+	var isEachFetch = false //遍历方式获取图片
 
-	//有源
-	if t.originPathUrl != "" {
-		preg := `https:\/\/mhpic([5-7])\.lineinfo\.cn\/mh160tuku\/([a-z]*)\/([^_]*)_([0-9]*)\/([^_]*)_([0-9]*)\/00([0-9]*)\.jpg`
-		reg := regexp.MustCompile(preg)
-		test := reg.FindStringSubmatch(t.originPathUrl)
-		//fmt.Println(test, len(test))
+	if isEachFetch {
+		baseUrl = "https://mhpic%s.lineinfo.cn/mh160tuku/%s/%s_%d/%s_%s/"
 
-		if len(test) == 8 {
-			realUrl = fmt.Sprintf(baseUrl, test[1], test[2], test[3], t.id, chapterName, originChapterId) + "00%s.jpg"
+		//有源
+		if t.originPathUrl != "" {
+			preg := `https:\/\/mhpic([5-7])\.lineinfo\.cn\/mh160tuku\/([a-z]*)\/([^_]*)_([0-9]*)\/([^_]*)_([0-9]*)\/00([0-9]*)\.jpg`
+			reg := regexp.MustCompile(preg)
+			test := reg.FindStringSubmatch(t.originPathUrl)
+			//fmt.Println(test, len(test))
+
+			if len(test) == 8 {
+				realUrl = fmt.Sprintf(baseUrl, test[1], test[2], test[3], t.id, chapterName, originChapterId) + "00%s.jpg"
+			}
+		} else {
+			realUrl = t.getImageUrl(baseUrl, bookName, chapterName, originChapterId, bookId)
+
+			//fmt.Println(realUrl)
+			if realUrl != "" {
+				has = true
+			}
 		}
 	} else {
-		realUrl = t.getImageUrl(baseUrl, bookName, chapterName, originChapterId, bookId)
-
-		//fmt.Println(realUrl)
-		if realUrl != "" {
-			has = true
-		}
+		realUrl = t.getChromedpUrl(bookId)
 	}
 
 	if t.originPathUrl == "" {
@@ -333,15 +339,19 @@ func (t *mh160) detail(originChapterId string, bookId, chapterId, chapterNum int
 
 		images.OriginUrl = strings.Replace(fmt.Sprintf(realUrl, fix), " ", "", -1)
 
+		fmt.Println(images.OriginUrl)
 		images.OrderId = i
 
 		if !has && i == 1 {
 			refererUrl := fmt.Sprintf("/kanmanhua/%d/%s.html", t.id, originChapterId)
 			isRight := t.checkUrl(images.OriginUrl, refererUrl)
+
 			if !isRight {
 				t.originPathUrl = ""
 
-				realUrl = t.getImageUrl(baseUrl, bookName, chapterName, originChapterId, bookId)
+				if isEachFetch {
+					realUrl = t.getImageUrl(baseUrl, bookName, chapterName, originChapterId, bookId)
+				}
 
 				if realUrl == "" {
 					t.model.DeleteChapter(chapterId)
@@ -360,6 +370,39 @@ func (t *mh160) detail(originChapterId string, bookId, chapterId, chapterNum int
 	isAdd = true
 	return
 
+}
+
+/**
+chromedp 方式获取图片
+*/
+func (t *mh160) getChromedpUrl(bookId int) (realUrl string) {
+	chapterUrl = strings.Replace(chapterUrl, "https://m.", "https://www.", -1)
+	result, err := library.ChromedpText(chapterUrl, "#pic-list img", chapterUrl)
+	if err != nil {
+		return
+	}
+
+	preg := `<img src="([^"]*)"`
+	reg := regexp.MustCompile(preg)
+	test := reg.FindStringSubmatch(result)
+
+	if len(test) == 2 {
+		pathUrl2, _ := url.QueryUnescape(test[1])
+		//fmt.Println(pathUrl2)
+		realUrl = strings.Replace(pathUrl2, "01.jpg", "%s.jpg", -1)
+
+		fmt.Printf("当前漫画的 PATH 是: %s\n", pathUrl2)
+		t.originPathUrl = pathUrl2
+
+		/*
+			book := t.model.Table.Books
+			book.OriginPathUrl = t.originPathUrl
+			book.UpdatedAt = time.Now().Unix()
+			t.model.UpdateBook(bookId, book)
+		*/
+	}
+
+	return
 }
 
 /**

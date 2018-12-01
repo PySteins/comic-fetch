@@ -15,7 +15,8 @@ type Config struct {
 }
 
 type setting struct {
-	Datatype string
+	Datatype,
+	DomainUrl string
 	ImageFetch,
 	Cache bool
 	WebPort int
