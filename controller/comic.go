@@ -176,6 +176,7 @@ func (t *Init) addMhBook(id int, flag string) {
 		var mh mh160
 		mh.db = t.Model.Db
 		mh.id = id
+		mh.Conf = t.Conf
 		mh.Init()
 		break
 

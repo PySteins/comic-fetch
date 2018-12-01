@@ -46,4 +46,5 @@
 - github.com/PuerkitoBio/goquery   
 - github.com/axgle/mahonia   
 - github.com/go-redis/redis   
-- github.com/gin-gonic/gin   
+- github.com/gin-gonic/gin  
+- github.com/chromedp/chromedp    

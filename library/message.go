@@ -64,10 +64,10 @@ func (t *Message) Dingtalk(flag int, params ...string) (notice bool) {
 }
 `
 	var title, text, picUrl, messageUrl string
-	////新增
+	//新增
 	if flag == 1 {
 		title = fmt.Sprintf("新增漫画:《%s》", params[0])
-		text = "来源: %s\n"
+		text = fmt.Sprintf("来源: %s", params[1])
 		picUrl = fmt.Sprintf("%s/images/%s.jpg", t.Conf.Setting.DomainUrl, params[3])
 		messageUrl = fmt.Sprintf("%s/chapter/%s/0/", t.Conf.Setting.DomainUrl, params[3])
 		//更新

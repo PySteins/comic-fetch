@@ -90,7 +90,6 @@ func (t *mh160) mobileChapter() {
 		if book.Id > 0 {
 			//新增漫画
 			t.new = true
-
 			//打开通知,打开新漫画通知
 			if t.Conf.Notice.Open != 0 && t.Conf.Notice.NewBook {
 				var msg library.Message
@@ -99,7 +98,7 @@ func (t *mh160) mobileChapter() {
 				switch t.Conf.Notice.Open {
 				//钉钉通知
 				case 1:
-					msg.Dingtalk(1, bookName, t.originWeb, strconv.Itoa(book.Id))
+					msg.Dingtalk(1, bookName, t.originWeb, "", strconv.Itoa(book.Id))
 					break
 
 				}
@@ -339,7 +338,7 @@ func (t *mh160) detail(originChapterId string, bookId, chapterId, chapterNum int
 
 		images.OriginUrl = strings.Replace(fmt.Sprintf(realUrl, fix), " ", "", -1)
 
-		fmt.Println(images.OriginUrl)
+		//fmt.Println(images.OriginUrl)
 		images.OrderId = i
 
 		if !has && i == 1 {
