@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/runner"
 	"log"
 )
 
@@ -13,6 +14,14 @@ func ChromedpText(site, sel, referer string) (res string, err error) {
 	// create context
 	ctxt, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	var options chromedp.Option
+	options = chromedp.WithRunnerOptions(
+		//runner.Headless(pathBrowser, 9222),
+		runner.Flag("headless", true),
+		runner.Flag("no-sandbox", true),
+		runner.Flag("disable-gpu", true),
+	)
 
 	// create chrome instance
 	c, err := chromedp.New(ctxt)
