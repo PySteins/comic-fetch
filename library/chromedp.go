@@ -24,7 +24,7 @@ func ChromedpText(site, sel, referer string) (res string, err error) {
 	)
 
 	// create chrome instance
-	c, err := chromedp.New(ctxt)
+	c, err := chromedp.New(ctxt, options)
 	if err != nil {
 		log.Println("error1: " + err.Error())
 		return
