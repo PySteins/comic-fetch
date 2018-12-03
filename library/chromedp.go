@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
-	"github.com/chromedp/chromedp/runner"
 	"log"
 )
 
@@ -15,18 +14,17 @@ func ChromedpText(site, sel, referer string) (res string, err error) {
 	ctxt, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	var options chromedp.Option
-	options = chromedp.WithRunnerOptions(
-		//runner.Headless(pathBrowser, 9222),
-		runner.Flag("headless", true),
-		runner.Flag("no-sandbox", true),
-		runner.Flag("disable-gpu", true),
-	)
+	//var options chromedp.Option
+	//pathBrowser := "/usr/bin/google-chrome"
+	//options = chromedp.WithRunnerOptions(
+	//runner.Headless(pathBrowser, 9222),
+	//runner.Flag("headless", true),
+	//	runner.Flag("no-sandbox", true),
+	//)
 
 	// create chrome instance
-	c, err := chromedp.New(ctxt, options)
+	c, err := chromedp.New(ctxt)
 	if err != nil {
-		log.Println("error1: " + err.Error())
 		return
 	}
 
@@ -40,21 +38,18 @@ func ChromedpText(site, sel, referer string) (res string, err error) {
 		&res,
 	))
 	if err != nil {
-		log.Println("error2: " + err.Error())
 		return
 	}
 
 	// shutdown chrome
 	err = c.Shutdown(ctxt)
 	if err != nil {
-		log.Println("error3: " + err.Error())
 		return
 	}
 
 	// wait for chrome to finish
 	err = c.Wait()
 	if err != nil {
-		log.Println("error4: " + err.Error())
 		return
 	}
 
